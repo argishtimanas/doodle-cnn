@@ -11,14 +11,8 @@ cat_drawings = np.load(cat_path)
 first_drawing = cat_drawings[0]
 
 image = first_drawing.reshape(28, 28)
+normalized_image = image / 255.0
 
-print(image.shape)
-
-plt.imshow(image, cmap="gray")
-plt.title("First cat drawing")
-plt.axis("off")
-plt.show()
-
-print(image.min())
-print(image.max())
-print(np.unique(image)[:20])
+print(normalized_image.min())
+print(normalized_image.max())
+print(normalized_image.dtype)
