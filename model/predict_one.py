@@ -13,30 +13,40 @@ model = tf.keras.models.load_model(MODEL_PATH)
 X_test = np.load(DATA_DIR / "X_test.npy")
 y_test = np.load(DATA_DIR / "y_test.npy")
 
-index = 0
+fig, axes = plt.subplots(3, 3, figsize=(9, 9))
+axes = axes.flatten()
 
-image = X_test[index]
-true_label = y_test[index]
+for index in range(9):
+    image = X_test[index]
+    true_label = y_test[index]
 
-batch = np.expand_dims(image, axis=0)
+    batch = np.expand_dims(image, axis=0)
 
-logits = model.predict(batch)
+    logits = model.predict(batch, verbose=0)
 
-single_logits = logits[0]
-probabilities = tf.nn.softmax(single_logits).numpy()
+    single_logits = logits[0]
+    probabilities = tf.nn.softmax(single_logits).numpy()
 
-predicted_id = np.argmax(probabilities)
-predicted_animal = CLASSES[predicted_id]
-confidence = probabilities[predicted_id]
+    predicted_id = np.argmax(probabilities)
+    predicted_animal = CLASSES[predicted_id]
+    confidence = probabilities[predicted_id]
 
-print("True:", CLASSES[true_label])
-print("Predicted:", predicted_animal)
-print(f"Confidence: {confidence * 100:.2f}%")
+    print(
+        index,
+        "True:", CLASSES[true_label],
+        "| Predicted:", predicted_animal,
+        "| Confidence:", f"{confidence * 100:.2f}%"
+    )
 
-plt.imshow(image.squeeze(), cmap="gray")
-plt.title(
-    f"True: {CLASSES[true_label]} | "
-    f"Predicted: {predicted_animal} ({confidence * 100:.2f}%)"
-)
-plt.axis("off")
+    axes[index].imshow(image.squeeze(), cmap="gray")
+
+    axes[index].set_title(
+        f"True: {CLASSES[true_label]}\n"
+        f"Pred: {predicted_animal} ({confidence * 100:.1f}%)"
+    )
+
+    axes[index].axis("off")
+
+
+plt.tight_layout()
 plt.show()
