@@ -1,9 +1,10 @@
 from pathlib import Path
-from pydantic import BaseModel
 
+import numpy as np
 import tensorflow as tf
 from fastapi import FastAPI
-import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 CLASSES = ["cat", "dog", "fish", "bird", "rabbit", "bear", "lion", "tiger", "elephant", "horse"]
 
@@ -14,17 +15,31 @@ model = tf.keras.models.load_model(MODEL_PATH)
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class DrawingRequest(BaseModel):
     pixels: list[float]
+
+@app.get("/")
+def home():
+    return {
+        "message": "DoodleNet API is running",
+        "classes": CLASSES,
+        "model_loaded": True,
+    }
 
 @app.post("/predict")
 def predict(request: DrawingRequest):
     pixels = np.array(request.pixels, dtype=np.float32)
 
     if pixels.size != 784:
-        return {
-            "error": f"Expected 784 pixels, received {pixels.size}"
-        }
+        return {"error": f"Expected 784 pixels, received {pixels.size}"}
 
     image = pixels.reshape(1, 28, 28, 1)
 
@@ -40,13 +55,5 @@ def predict(request: DrawingRequest):
         "probabilities": {
             CLASSES[i]: float(probabilities[i])
             for i in range(len(CLASSES))
-        }
-    }
-
-@app.get("/")
-def home():
-    return {
-        "message": "DoodleNet API is running",
-        "classes": CLASSES,
-        "model_loaded": True,
+        },
     }
